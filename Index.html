@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>갑자TV 시참 신청</title>
+    <style>
+        body {
+            font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+            background-color: #121212; color: white;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: flex-start; padding-top: 10vh;
+            min-height: 100vh; margin: 0; text-align: center; box-sizing: border-box;
+        }
+        
+        .container {
+            width: 85%; max-width: 380px; padding: 30px 20px; 
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px; border: 3px solid #ffcc00; /* 메인 노란색 테두리 */
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
+            box-sizing: border-box; transition: all 0.3s ease;
+        }
+
+        .title-logo { width: 80px; height: auto; margin-bottom: 10px; filter: drop-shadow(0 0 5px rgba(255,204,0,0.5)); }
+        h1 { color: #ffcc00; margin: 0 0 10px 0; font-size: 1.5rem; line-height: 1.4; }
+        
+        .waiting-status {
+            background: rgba(255, 204, 0, 0.1); color: #ffcc00;
+            padding: 8px 15px; border-radius: 50px; font-size: 0.85rem;
+            display: inline-block; margin-bottom: 20px; font-weight: bold;
+        }
+
+        /* 실시간 시계 스타일 */
+        #liveClock { color: #ffcc00; font-size: 1.1rem; font-weight: bold; margin-bottom: 25px; letter-spacing: 1px; }
+        
+        input {
+            width: 100%; padding: 15px; margin-bottom: 15px;
+            border-radius: 10px; border: 1px solid #555;
+            background: #222; color: white; font-size: 1.1rem;
+            box-sizing: border-box; text-align: center;
+        }
+        
+        button {
+            width: 100%; padding: 15px; border-radius: 10px; border: none;
+            background: #ffcc00; color: #000; font-size: 1.2rem; font-weight: 900; 
+            cursor: pointer; box-shadow: 0 4px 10px rgba(255, 204, 0, 0.3);
+            transition: transform 0.1s;
+        }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #555; color: #888; cursor: not-allowed; }
+        
+        #cooldownMsg { color: #ff4444; font-size: 0.8rem; margin-top: 10px; display: none; }
+
+        /* 신청 완료 화면 */
+        #successSection { display: none; }
+        .success-icon { font-size: 4rem; color: #ffcc00; margin-bottom: 20px; }
+
+        .footer { margin-top: 20px; font-size: 0.8rem; color: #666; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainContainer">
+        <div id="formSection">
+            <img src="https://tistory1.daumcdn.net/tistory/4488967/skin/images/gajayu.png" class="title-logo">
+            <h1>갑자TV 시참 신청</h1>
+            <div class="waiting-status">🔥 최근 1시간 대기: <span id="waitingCount">?</span>명</div>
+
+            <div id="liveClock">0000년 00월 00일 00:00:00</div>
+            
+            <input type="text" id="nickname" placeholder="게임 닉네임 입력">
+            <button id="submitBtn" onclick="sendData()">🚀 신청하기</button>
+            <div id="cooldownMsg">도배 방지를 위해 잠시 후 다시 신청 가능합니다.</div>
+            <div class="footer">방송 화면의 대기 명단을 확인하세요!</div>
+        </div>
+
+        <div id="successSection">
+            <div class="success-icon">✅</div>
+            <h1 style="color: white;">신청 완료!</h1>
+            <p style="color: #ffcc00; font-weight: bold;">정상적으로 접수되었습니다.</p>
+            <p>방송을 보며 순서를 기다려주세요!</p>
+            <button onclick="location.reload()" style="background: #333; color: #fff; font-size: 0.9rem; padding: 10px; margin-top: 20px;">처음으로</button>
+        </div>
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyyJuoBA7A-mzqmBHdV52HBYB21K__bWa_MMHPUDI1rMn7bpzO_uAJbAeBS8XPdhGOb/exec"; 
+        const COOLDOWN_TIME = 5 * 60 * 1000; // 5분
+
+        // 1. 실시간 시계 기능
+        function updateClock() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('liveClock').innerText = `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 2. 대기 인원 가져오기 (최근 1시간 통계)
+        function fetchWaitingCount() {
+            fetch(GAS_URL)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('waitingCount').innerText = data.count || 0;
+                })
+                .catch(() => document.getElementById('waitingCount').innerText = "0");
+        }
+
+        // 3. 쿨타임 체크 (기기별 로컬 스토리지)
+        // IP 차단은 서버 설정이 복잡하므로, 브라우저 로컬 스토리지를 사용합니다.
+        // 이 방식은 내 폰에서 신청하면 나만 막히고, 다른 사람은 아무 상관 없이 신청 가능합니다.
+        function checkCooldown() {
+            const lastSubmit = localStorage.getItem('lastSubmitTime');
+            if (lastSubmit) {
+                const timePassed = Date.now() - parseInt(lastSubmit);
+                if (timePassed < COOLDOWN_TIME) {
+                    const btn = document.getElementById('submitBtn');
+                    btn.disabled = true;
+                    document.getElementById('cooldownMsg').style.display = 'block';
+                    btn.innerText = "잠시 후 신청 가능";
+                }
+            }
+        }
+
+        function sendData() {
+            const input = document.getElementById('nickname');
+            const btn = document.getElementById('submitBtn');
+            const name = input.value.trim();
+
+            if (!name) return alert("닉네임을 입력해주세요!");
+
+            btn.disabled = true;
+            btn.innerText = "전송 중...";
+
+            fetch(GAS_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nickname: name })
+            })
+            .then(() => {
+                localStorage.setItem('lastSubmitTime', Date.now()); // 신청한 기기에만 쿨타임 적용
+                showSuccess();
+            })
+            .catch(() => {
+                alert("오류 발생! 다시 시도해주세요.");
+                btn.disabled = false;
+            });
+        }
+
+        function showSuccess() {
+            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('successSection').style.display = 'block';
+            // 완료 화면 테두리도 노란색 유지 (요청사항)
+            document.getElementById('mainContainer').style.borderColor = '#ffcc00';
+        }
+
+        window.onload = () => { fetchWaitingCount(); checkCooldown(); };
+    </script>
+</body>
+</html>
