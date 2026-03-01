@@ -19,7 +19,11 @@
             box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
             box-sizing: border-box; transition: all 0.3s ease;
         }
-        .title-logo { width: 80px; height: auto; margin-bottom: 10px; filter: drop-shadow(0 0 5px rgba(255,204,0,0.5)); }
+        
+        .header-container { position: relative; width: 100%; text-align: center; margin-bottom: 10px; }
+        .live-status-text { position: absolute; top: 0; left: 0; font-size: 0.8rem; font-weight: bold; color: #6c757d; cursor: default; white-space: nowrap; }
+        .title-logo { width: 90px; height: auto; margin-top: 15px; margin-bottom: 5px; filter: drop-shadow(0 0 5px rgba(255,204,0,0.5)); }
+        
         h1 { color: #ffcc00; margin: 0 0 10px 0; font-size: 1.5rem; line-height: 1.4; }
         .waiting-status {
             background: rgba(255, 204, 0, 0.1); color: #ffcc00;
@@ -31,20 +35,14 @@
         .input-group {
             display: flex; gap: 8px; margin-bottom: 15px; width: 100%;
         }
-        
         input {
-            flex: 6; 
-            min-width: 0;
-            padding: 15px; margin-bottom: 0; 
+            flex: 6; min-width: 0; padding: 15px; margin-bottom: 0; 
             border-radius: 10px; border: 1px solid #555;
             background: #222; color: white; font-size: 1.1rem;
             box-sizing: border-box; text-align: center;
         }
-        
         select {
-            flex: 4; 
-            min-width: 0;
-            padding: 15px 5px; border-radius: 10px; border: 1px solid #555;
+            flex: 4; min-width: 0; padding: 15px 5px; border-radius: 10px; border: 1px solid #555;
             background: #222; color: #ffcc00; font-size: 0.95rem; font-weight: bold;
             box-sizing: border-box; cursor: pointer; text-align: center;
         }
@@ -59,8 +57,6 @@
         button.main-btn:disabled { background: #555; color: #888; cursor: not-allowed; }
         
         .donate-btn-group { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; }
-        
-        /* [수정됨] 글씨 크기를 0.85rem으로 줄이고, 자간을 좁히고, 줄바꿈을 방지(nowrap)했습니다. */
         .donate-btn {
             flex: 1; padding: 12px 0; border-radius: 8px; border: none; font-weight: bold; font-size: 0.85rem; letter-spacing: -0.5px; white-space: nowrap; cursor: pointer; color: white; transition: transform 0.1s;
         }
@@ -71,11 +67,10 @@
         .cooldown-msg { color: #ff4444; font-size: 0.8rem; margin-top: 10px; display: none; }
         
         #successSection, #prioritySection, #prioritySuccessSection { display: none; }
-        
         .success-icon { font-size: 4rem; color: #ffcc00; margin-bottom: 20px; }
         
-        .footer { margin-top: 20px; font-size: 0.8rem; color: #666; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
-        .footer:hover { color: #ffcc00; }
+        .footer-link { margin-top: 20px; font-size: 0.8rem; color: #666; cursor: pointer; text-decoration: underline; transition: color 0.2s; font-family: 'Pretendard', 'Malgun Gothic', sans-serif;}
+        .footer-link:hover { color: #ffcc00; }
         .back-link { margin-top: 20px; font-size: 0.85rem; color: #aaa; text-decoration: underline; cursor: pointer; }
     </style>
 </head>
@@ -83,9 +78,14 @@
     <div class="container" id="mainContainer">
         
         <div id="formSection">
-            <img src="https://tistory1.daumcdn.net/tistory/4488967/skin/images/gajayu.png" class="title-logo">
+            
+            <div class="header-container">
+                <div id="liveStatusText" class="live-status-text">⚪ 라이브(준비중)</div>
+                <img src="https://tistory1.daumcdn.net/tistory/4488967/skin/images/gajayu.png" class="title-logo">
+            </div>
+
             <h1>갑자TV 시참 신청</h1>
-            <div class="waiting-status">🔥현재 참여자 : <span id="waitingCount">?</span>명</div>
+            <div class="waiting-status">🔥현재 참여자 : <span id="waitingCount">확인중...</span></div>
             <div id="liveClock">0000년 00월 00일 00:00:00</div>
             
             <div class="input-group">
@@ -100,7 +100,7 @@
             <button id="submitBtn" class="main-btn" onclick="sendData()">🚀 신청하기</button>
             <div id="cooldownMsg" class="cooldown-msg">도배 방지를 위해 잠시 후 다시 신청 가능합니다.</div>
             
-            <div class="footer" onclick="window.open('https://toon.at/donate/gapjatv', '_blank')">후원하기</div>
+            <div class="footer-link" onclick="window.open('https://toon.at/donate/gapjatv', '_blank')">후원하기</div>
         </div>
 
         <div id="successSection">
@@ -114,7 +114,7 @@
         </div>
 
         <div id="prioritySection">
-            <img src="https://tistory1.daumcdn.net/tistory/4488967/skin/images/gajayu.png" class="title-logo">
+            <img src="https://tistory1.daumcdn.net/tistory/4488967/skin/images/gajayu.png" class="title-logo" style="display: block; margin: 0 auto 10px auto; width: 90px; margin-top: 0;">
             <h1>갑자ᵗᵛ 후원 및 우선예약</h1>
             
             <div class="donate-btn-group">
@@ -173,9 +173,25 @@
             fetch(GAS_URL)
                 .then(res => res.json())
                 .then(data => {
-                    document.getElementById('waitingCount').innerText = data.count || 0;
+                    // [수정됨] 데이터를 받아오면 "O명"으로 출력되도록 변경
+                    document.getElementById('waitingCount').innerText = (data.count || 0) + "명";
+                    updateLiveStatus(data.isLive === true);
                 })
-                .catch(() => document.getElementById('waitingCount').innerText = "0");
+                .catch(() => {
+                    document.getElementById('waitingCount').innerText = "0명";
+                    updateLiveStatus(false);
+                });
+        }
+
+        function updateLiveStatus(isOnline) {
+            const statusText = document.getElementById('liveStatusText');
+            if(isOnline) {
+                statusText.innerText = "🔵 라이브(진행중)";
+                statusText.style.color = "#007bff"; 
+            } else {
+                statusText.innerText = "⚪ 라이브(준비중)";
+                statusText.style.color = "#6c757d"; 
+            }
         }
 
         function checkCooldown() {
@@ -216,7 +232,6 @@
 
         function copyBankAccount() {
             const accountInfo = "3333-11-6729871"; 
-            
             navigator.clipboard.writeText(accountInfo).then(() => {
                 alert("카카오뱅크 3333-11-6729871 (예금주: 백**)\n\n✅ 계좌번호가 복사되었습니다!\n소중한 후원 정말 감사드립니다!");
             }).catch(err => {
@@ -234,12 +249,10 @@
 
             btn.disabled = true;
             btn.innerText = "전송 중...";
-
             const combinedNickname = name + " [" + mode + "]";
 
             fetch(GAS_URL, {
-                method: "POST",
-                mode: "no-cors",
+                method: "POST", mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ nickname: combinedNickname }) 
             })
@@ -265,12 +278,10 @@
 
             btn.disabled = true;
             btn.innerText = "전송 중...";
-
             const combinedNickname = name + " [우선예약-" + mode + "]";
 
             fetch(GAS_URL, {
-                method: "POST",
-                mode: "no-cors",
+                method: "POST", mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ nickname: combinedNickname }) 
             })
