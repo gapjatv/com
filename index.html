@@ -31,47 +31,32 @@
         }
         #liveClock { color: #ffcc00; font-size: 1.1rem; font-weight: bold; margin-bottom: 25px; letter-spacing: 1px; }
         
+        /* 7:3 비율 유지 */
         .input-group {
             display: flex; gap: 8px; margin-bottom: 15px; width: 100%;
         }
-        /* 입력창 7 비율 */
         input {
             flex: 7; min-width: 0; padding: 15px; margin-bottom: 0; 
             border-radius: 10px; border: 1px solid #555;
             background: #222; color: white; font-size: 1.1rem;
             box-sizing: border-box; text-align: center;
         }
-        /* 드롭다운 3 비율 */
         select {
             flex: 3; min-width: 0; padding: 15px 5px; border-radius: 10px; border: 1px solid #555;
             background: #222; color: #ffcc00; font-size: 0.95rem; font-weight: bold;
             box-sizing: border-box; cursor: pointer; text-align: center;
         }
 
-        .btn-group {
-            display: flex; gap: 8px; width: 100%; margin-bottom: 15px;
-        }
-        /* 신청하기 버튼 7 비율 */
+        /* 신청하기 버튼 기존 크기(100%) 원복 */
         button.main-btn {
-            flex: 7; 
-            padding: 15px; border-radius: 10px; border: none;
+            width: 100%; 
+            padding: 15px; border-radius: 10px; border: none; margin-bottom: 15px;
             background: #ffcc00; color: #000; font-size: 1.2rem; font-weight: 900; 
             cursor: pointer; box-shadow: 0 4px 10px rgba(255, 204, 0, 0.3);
             transition: transform 0.1s;
         }
         button.main-btn:active { transform: scale(0.98); }
         button.main-btn:disabled { background: #555; color: #888; cursor: not-allowed; }
-        
-        /* 채팅 버튼 3 비율 */
-        button.chat-btn {
-            flex: 3; 
-            padding: 15px 0; border-radius: 10px; border: none;
-            background: #FEE500; 
-            color: #000000; font-size: 1rem; font-weight: 900;
-            cursor: pointer; box-shadow: 0 4px 10px rgba(254, 229, 0, 0.2);
-            transition: transform 0.1s; display: flex; align-items: center; justify-content: center;
-        }
-        button.chat-btn:active { transform: scale(0.95); }
         
         .donate-btn-group { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; }
         .donate-btn {
@@ -106,17 +91,15 @@
             
             <div class="input-group">
                 <input type="text" id="nickname" placeholder="게임 닉네임 입력">
-                <select id="modeSelect" onchange="checkPrioritySelect()">
+                <select id="modeSelect" onchange="checkModeSelect()">
                     <option value="태초">태초</option>
                     <option value="신">신</option>
-                    <option value="우선예약">우선예약</option>
+                    <option value="우선예약">우선예약(모든모드)</option>
+                    <option value="채팅">채팅</option>
                 </select>
             </div>
             
-            <div class="btn-group">
-                <button id="submitBtn" class="main-btn" onclick="sendData()">🚀 신청하기</button>
-                <button class="chat-btn" onclick="window.open('https://gapjatv.github.io/chat/', '_blank')">채팅</button>
-            </div>
+            <button id="submitBtn" class="main-btn" onclick="sendData()">🚀 신청하기</button>
             <div id="cooldownMsg" class="cooldown-msg">도배 방지를 위해 잠시 후 다시 신청 가능합니다.</div>
             
             <div class="footer-link" onclick="window.open('https://toon.at/donate/gapjatv', '_blank')">후원하기</div>
@@ -221,12 +204,18 @@
             }
         }
 
-        function checkPrioritySelect() {
-            const mode = document.getElementById('modeSelect').value;
+        // 드롭다운 변경 시 실행되는 함수 수정 (채팅 기능 추가)
+        function checkModeSelect() {
+            const selectEl = document.getElementById('modeSelect');
+            const mode = selectEl.value;
+            
             if (mode === "우선예약") {
                 document.getElementById('formSection').style.display = 'none';
                 document.getElementById('prioritySection').style.display = 'block';
-                document.getElementById('modeSelect').value = "태초"; 
+                selectEl.value = "태초"; // 모드 초기화
+            } else if (mode === "채팅") {
+                window.open('https://gapjatv.github.io/chat/', '_blank');
+                selectEl.value = "태초"; // 새 창 열린 후 모드 초기화 (다시 선택할 수 있게)
             }
         }
 
