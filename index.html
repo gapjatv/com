@@ -21,8 +21,7 @@
         }
         
         .header-container { position: relative; width: 100%; text-align: center; margin-bottom: 10px; }
-        .live-status-text { position: absolute; top: 0; left: 0; font-size: 0.8rem; font-weight: bold; color: #6c757d; cursor: default; white-space: nowrap; }
-        .title-logo { width: 90px; height: auto; margin-top: 15px; margin-bottom: 5px; filter: drop-shadow(0 0 5px rgba(255,204,0,0.5)); }
+        .title-logo { width: 120px; height: auto; margin-top: 15px; margin-bottom: 5px; filter: drop-shadow(0 0 5px rgba(255,204,0,0.5)); }
         
         h1 { color: #ffcc00; margin: 0 0 10px 0; font-size: 1.5rem; line-height: 1.4; }
         .waiting-status {
@@ -35,26 +34,44 @@
         .input-group {
             display: flex; gap: 8px; margin-bottom: 15px; width: 100%;
         }
+        /* 입력창 7 비율 */
         input {
-            flex: 6; min-width: 0; padding: 15px; margin-bottom: 0; 
+            flex: 7; min-width: 0; padding: 15px; margin-bottom: 0; 
             border-radius: 10px; border: 1px solid #555;
             background: #222; color: white; font-size: 1.1rem;
             box-sizing: border-box; text-align: center;
         }
+        /* 드롭다운 3 비율 */
         select {
-            flex: 4; min-width: 0; padding: 15px 5px; border-radius: 10px; border: 1px solid #555;
+            flex: 3; min-width: 0; padding: 15px 5px; border-radius: 10px; border: 1px solid #555;
             background: #222; color: #ffcc00; font-size: 0.95rem; font-weight: bold;
             box-sizing: border-box; cursor: pointer; text-align: center;
         }
 
+        .btn-group {
+            display: flex; gap: 8px; width: 100%; margin-bottom: 15px;
+        }
+        /* 신청하기 버튼 7 비율 */
         button.main-btn {
-            width: 100%; padding: 15px; border-radius: 10px; border: none;
+            flex: 7; 
+            padding: 15px; border-radius: 10px; border: none;
             background: #ffcc00; color: #000; font-size: 1.2rem; font-weight: 900; 
             cursor: pointer; box-shadow: 0 4px 10px rgba(255, 204, 0, 0.3);
             transition: transform 0.1s;
         }
         button.main-btn:active { transform: scale(0.98); }
         button.main-btn:disabled { background: #555; color: #888; cursor: not-allowed; }
+        
+        /* 채팅 버튼 3 비율 */
+        button.chat-btn {
+            flex: 3; 
+            padding: 15px 0; border-radius: 10px; border: none;
+            background: #FEE500; 
+            color: #000000; font-size: 1rem; font-weight: 900;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(254, 229, 0, 0.2);
+            transition: transform 0.1s; display: flex; align-items: center; justify-content: center;
+        }
+        button.chat-btn:active { transform: scale(0.95); }
         
         .donate-btn-group { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; }
         .donate-btn {
@@ -64,7 +81,7 @@
         .btn-toon { background: linear-gradient(to right, #00a8ff, #0097e6); box-shadow: 0 3px 8px rgba(0, 168, 255, 0.4); }
         .btn-bank { background: linear-gradient(to right, #4CAF50, #388E3C); box-shadow: 0 3px 8px rgba(76, 175, 80, 0.4); }
 
-        .cooldown-msg { color: #ff4444; font-size: 0.8rem; margin-top: 10px; display: none; }
+        .cooldown-msg { color: #ff4444; font-size: 0.8rem; margin-top: -5px; display: none; }
         
         #successSection, #prioritySection, #prioritySuccessSection { display: none; }
         .success-icon { font-size: 4rem; color: #ffcc00; margin-bottom: 20px; }
@@ -80,7 +97,6 @@
         <div id="formSection">
             
             <div class="header-container">
-                <div id="liveStatusText" class="live-status-text">⚪ 라이브(준비중)</div>
                 <img src="https://tistory1.daumcdn.net/tistory/4488967/skin/images/gajayu.png" class="title-logo">
             </div>
 
@@ -97,7 +113,10 @@
                 </select>
             </div>
             
-            <button id="submitBtn" class="main-btn" onclick="sendData()">🚀 신청하기</button>
+            <div class="btn-group">
+                <button id="submitBtn" class="main-btn" onclick="sendData()">🚀 신청하기</button>
+                <button class="chat-btn" onclick="window.open('https://gapjatv.github.io/chat/', '_blank')">채팅</button>
+            </div>
             <div id="cooldownMsg" class="cooldown-msg">도배 방지를 위해 잠시 후 다시 신청 가능합니다.</div>
             
             <div class="footer-link" onclick="window.open('https://toon.at/donate/gapjatv', '_blank')">후원하기</div>
@@ -114,7 +133,7 @@
         </div>
 
         <div id="prioritySection">
-            <img src="https://tistory1.daumcdn.net/tistory/4488967/skin/images/gajayu.png" class="title-logo" style="display: block; margin: 0 auto 10px auto; width: 90px; margin-top: 0;">
+            <img src="https://tistory1.daumcdn.net/tistory/4488967/skin/images/gajayu.png" class="title-logo" style="display: block; margin: 0 auto 10px auto; width: 120px; margin-top: 0;">
             <h1>갑자ᵗᵛ 후원 및 우선예약</h1>
             
             <div class="donate-btn-group">
@@ -173,25 +192,11 @@
             fetch(GAS_URL)
                 .then(res => res.json())
                 .then(data => {
-                    // [수정됨] 데이터를 받아오면 "O명"으로 출력되도록 변경
                     document.getElementById('waitingCount').innerText = (data.count || 0) + "명";
-                    updateLiveStatus(data.isLive === true);
                 })
                 .catch(() => {
                     document.getElementById('waitingCount').innerText = "0명";
-                    updateLiveStatus(false);
                 });
-        }
-
-        function updateLiveStatus(isOnline) {
-            const statusText = document.getElementById('liveStatusText');
-            if(isOnline) {
-                statusText.innerText = "🔵 라이브(진행중)";
-                statusText.style.color = "#007bff"; 
-            } else {
-                statusText.innerText = "⚪ 라이브(준비중)";
-                statusText.style.color = "#6c757d"; 
-            }
         }
 
         function checkCooldown() {
