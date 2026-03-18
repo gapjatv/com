@@ -47,7 +47,6 @@
             box-sizing: border-box; cursor: pointer; text-align: center;
         }
 
-        /* 신청하기 버튼 기존 크기(100%) 원복 */
         button.main-btn {
             width: 100%; 
             padding: 15px; border-radius: 10px; border: none; margin-bottom: 15px;
@@ -74,6 +73,24 @@
         .footer-link { margin-top: 20px; font-size: 0.8rem; color: #666; cursor: pointer; text-decoration: underline; transition: color 0.2s; font-family: 'Pretendard', 'Malgun Gothic', sans-serif;}
         .footer-link:hover { color: #ffcc00; }
         .back-link { margin-top: 20px; font-size: 0.85rem; color: #aaa; text-decoration: underline; cursor: pointer; }
+
+        /* 커스텀 팝업(모달) 스타일 추가 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); display: none; align-items: center; justify-content: center; z-index: 100;
+        }
+        .modal-box {
+            background: #222; padding: 25px 20px; border-radius: 15px; border: 2px solid #ffcc00;
+            width: 80%; max-width: 320px; text-align: center; box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+        }
+        .modal-box p { color: white; margin-bottom: 20px; font-size: 1.1rem; line-height: 1.5; font-weight: bold; }
+        .modal-btn-group { display: flex; gap: 10px; width: 100%; }
+        .modal-btn {
+            flex: 1; padding: 12px 0; border-radius: 8px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; transition: transform 0.1s;
+        }
+        .modal-btn:active { transform: scale(0.95); }
+        .btn-cancel { background: #555; color: white; }
+        .btn-confirm { background: #ffcc00; color: black; }
     </style>
 </head>
 <body>
@@ -126,19 +143,21 @@
 
             <div class="input-group">
                 <input type="text" id="priorityNickname" placeholder="게임 닉네임 입력">
-                <select id="priorityModeSelect">
+                <select id="priorityModeSelect" onchange="checkPriorityModeSelect()">
+                    <option value="" disabled selected>선택</option>
                     <option value="태초">태초</option>
                     <option value="신">신</option>
                     <option value="지옥">지옥</option>
                     <option value="하드">하드</option>
                     <option value="일반">일반</option>
+                    <option value="채팅(알림)">채팅(알림)</option>
                 </select>
             </div>
             
-            <button id="prioritySubmitBtn" class="main-btn" onclick="sendPriorityData()">🚀 우선예약 신청</button>
+            <button id="prioritySubmitBtn" class="main-btn" onclick="openConfirmModal()">🚀 우선예약 신청</button>
             <div id="priorityCooldownMsg" class="cooldown-msg">도배 방지를 위해 1분 후 다시 신청 가능합니다.</div>
             
-            <div class="back-link" onclick="goBackToMain()">← 일반 시참 신청으로 돌아가기</div>
+            <div class="back-link" onclick="goBackToMain()">← 일반 신청가기</div>
         </div>
 
         <div id="prioritySuccessSection">
@@ -151,6 +170,16 @@
             <button onclick="location.reload()" style="background: #333; color: #fff; font-size: 0.9rem; padding: 10px; margin-top: 20px; border-radius: 8px; border:none; cursor:pointer;">처음으로</button>
         </div>
 
+    </div>
+
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-box">
+            <p>후원 완료 후<br>신청이 가능합니다.</p>
+            <div class="modal-btn-group">
+                <button class="modal-btn btn-cancel" onclick="closeConfirmModal()">돌아가기</button>
+                <button class="modal-btn btn-confirm" onclick="executePrioritySubmit()">신청완료</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -204,7 +233,6 @@
             }
         }
 
-        // 드롭다운 변경 시 실행되는 함수 수정 (채팅 기능 추가)
         function checkModeSelect() {
             const selectEl = document.getElementById('modeSelect');
             const mode = selectEl.value;
@@ -212,10 +240,19 @@
             if (mode === "우선예약") {
                 document.getElementById('formSection').style.display = 'none';
                 document.getElementById('prioritySection').style.display = 'block';
-                selectEl.value = "태초"; // 모드 초기화
+                selectEl.value = "태초"; 
             } else if (mode === "채팅") {
                 window.open('https://gapjatv.github.io/chat/', '_blank');
-                selectEl.value = "태초"; // 새 창 열린 후 모드 초기화 (다시 선택할 수 있게)
+                selectEl.value = "태초"; 
+            }
+        }
+
+        // 우선예약 창의 드롭다운 처리 추가
+        function checkPriorityModeSelect() {
+            const selectEl = document.getElementById('priorityModeSelect');
+            if (selectEl.value === "채팅(알림)") {
+                window.open('https://gapjatv.github.io/chat/', '_blank');
+                selectEl.value = ""; // 창 열고 나서 다시 '선택' 상태로 되돌림
             }
         }
 
@@ -262,13 +299,32 @@
             });
         }
 
-        function sendPriorityData() {
+        // 모달 열기 함수
+        function openConfirmModal() {
+            const input = document.getElementById('priorityNickname');
+            const selectEl = document.getElementById('priorityModeSelect');
+            const mode = selectEl.value;
+            const name = input.value.trim();
+
+            if (!name) return alert("게임 닉네임을 입력해주세요!");
+            if (!mode) return alert("모드를 선택해주세요!"); // '선택' 상태인 경우 방어
+
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        // 모달 닫기(돌아가기) 함수
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+        }
+
+        // 실제 우선예약 전송 함수 (신청완료 클릭 시 실행)
+        function executePrioritySubmit() {
+            closeConfirmModal(); // 창 먼저 닫기
+
             const input = document.getElementById('priorityNickname');
             const mode = document.getElementById('priorityModeSelect').value; 
             const btn = document.getElementById('prioritySubmitBtn');
             const name = input.value.trim();
-
-            if (!name) return alert("게임 닉네임을 입력해주세요!");
 
             btn.disabled = true;
             btn.innerText = "전송 중...";
